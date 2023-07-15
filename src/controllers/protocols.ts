@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface HttpResponse<T> {
-    statusCode: number;
-    body: T | string;
+  statusCode: number;
+  body: T | string;
 }
 
 export interface HttpRequest<B> {
-  params?: unknown;
-  headers?: unknown;
+  params?: any;
+  headers?: any;
   body?: B;
 }
