@@ -1,22 +1,24 @@
 import { User } from "../../models/user";
 import { MongoUpdateUserRepository } from "../../repositories/update-user/mongo-update-user";
-import { HttpRequest, HttpResponse } from "../protocols";
-import { IUpdateUserController, IUpdateUserParams } from "./protocols";
+import { badRequest, goodRequest, serverError } from "../helpers";
+import { HttpRequest, HttpResponse, IController } from "../protocols";
+import { IUpdateUserParams } from "./protocols";
 
-export class UpdateUserController implements IUpdateUserController {
+export class UpdateUserController implements IController {
   constructor(private readonly updateUserRepository: MongoUpdateUserRepository) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async handle(httpRequest: HttpRequest<any>): Promise<HttpResponse<User>> {
+  async handle(httpRequest: HttpRequest<IUpdateUserParams>): Promise<HttpResponse<User | string>> {
     try {
       const id = httpRequest?.params?.id;
       const body = httpRequest.body;
 
       if (!id) {
-        return {
-          statusCode: 400,
-          body: "Missing user id" 
-        };
+        return badRequest('Missing user id');
+      }
+
+      if (!body) {
+        return badRequest('Missing fields');
       }
 
       const allowedFieldsToUpdate: (keyof IUpdateUserParams)[] = ["firstName", "lastName", "password"];
@@ -24,24 +26,15 @@ export class UpdateUserController implements IUpdateUserController {
       const someFieldIsNotAllowedUpdate = Object.keys(body).some((key) => !allowedFieldsToUpdate.includes(key as keyof IUpdateUserParams));
 
       if (someFieldIsNotAllowedUpdate) {
-        return {
-          statusCode: 400,
-          body: "Some recived field is not allowed"
-        };
+        return badRequest('Some recived field is not allowed');
       }
 
       const user = await this.updateUserRepository.updateUser(id, body);
       
-      return {
-        statusCode: 200,
-        body: user
-      };
+      return goodRequest<User>(user);
 
     } catch (error) {
-      return {
-        statusCode: 500,
-        body: 'Something went wrong'
-      };
+      return serverError();
     }
   }
 }

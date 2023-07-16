@@ -17,5 +17,5 @@ export const MongoClient = {
     this.db = db;
 
     console.log('Connected to MongoDB!');
-  }
+  },
 }
